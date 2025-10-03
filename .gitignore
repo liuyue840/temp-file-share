@@ -147,7 +147,6 @@ config.local.js
 config.local.json
 
 # PM2 files
-ecosystem.config.js
 .pm2/
 
 # Docker
