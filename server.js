@@ -1,4 +1,4 @@
-const express = require('express');
+﻿const express = require('express');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
@@ -18,21 +18,23 @@ const publicDir = path.join(__dirname, 'public');
   }
 });
 
-// 中间件配置
+// 配置静态文件服务
+app.use(express.static(publicDir));
 app.use(express.json());
-app.use(express.static('public'));
+
+// 文件过期时间（24小时）
+const FILE_EXPIRY_TIME = 24 * 60 * 60 * 1000; // 24小时毫秒数
 
 // 配置multer用于文件上传
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
+  destination: function (req, file, cb) {
     cb(null, uploadsDir);
   },
-  filename: (req, file, cb) => {
-    // 生成唯一文件名，避免冲突
+  filename: function (req, file, cb) {
+    // 生成唯一文件名
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
     const ext = path.extname(file.originalname);
-    const name = path.basename(file.originalname, ext);
-    const filename = `${name}-${uniqueSuffix}${ext}`;
+    const filename = uniqueSuffix + ext;
     cb(null, filename);
   }
 });
@@ -40,54 +42,48 @@ const storage = multer.diskStorage({
 const upload = multer({ 
   storage: storage,
   limits: {
-    fileSize: 100 * 1024 * 1024 // 100MB 限制
+    fileSize: 100 * 1024 * 1024 // 100MB限制
+  },
+  fileFilter: function (req, file, cb) {
+    // 这里可以添加文件类型过滤逻辑
+    cb(null, true);
   }
 });
 
-// 工具函数：保存文件元数据
-function saveFileMetadata(filename, originalName, size, mimetype) {
-  const now = new Date();
-  const expiryTime = new Date(now.getTime() + 24 * 60 * 60 * 1000); // 24小时后过期
-  
+// 保存文件元数据
+function saveFileMetadata(filename, originalName, mimetype, size) {
   const metadata = {
     filename,
     originalName,
-    size,
     mimetype,
-    uploadTime: now.toISOString(),
-    expiryTime: expiryTime.toISOString()
+    size,
+    uploadTime: new Date().toISOString(),
+    expiryTime: new Date(Date.now() + FILE_EXPIRY_TIME).toISOString()
   };
   
-  const metadataPath = path.join(metadataDir, `${filename}.json`);
-  fs.writeFileSync(metadataPath, JSON.stringify(metadata, null, 2));
-  
-  return metadata;
+  const metadataPath = path.join(metadataDir, filename + '.json');
+  try {
+    fs.writeFileSync(metadataPath, JSON.stringify(metadata, null, 2));
+  } catch (error) {
+    console.error('保存元数据失败:', error);
+  }
 }
 
-// 工具函数：读取文件元数据
+// 获取文件元数据
 function getFileMetadata(filename) {
-  const metadataPath = path.join(metadataDir, `${filename}.json`);
-  if (fs.existsSync(metadataPath)) {
-    try {
+  const metadataPath = path.join(metadataDir, filename + '.json');
+  try {
+    if (fs.existsSync(metadataPath)) {
       const data = fs.readFileSync(metadataPath, 'utf8');
       return JSON.parse(data);
-    } catch (error) {
-      console.error('读取元数据失败:', error);
-      return null;
     }
+  } catch (error) {
+    console.error('读取元数据失败:', error);
   }
   return null;
 }
 
-// 工具函数：计算剩余时间
-function calculateRemainingTime(expiryTime) {
-  const now = new Date();
-  const expiry = new Date(expiryTime);
-  const remaining = expiry.getTime() - now.getTime();
-  return Math.max(0, remaining);
-}
-
-// 工具函数：格式化剩余时间
+// 格式化剩余时间
 function formatRemainingTime(milliseconds) {
   if (milliseconds <= 0) return '已过期';
   
@@ -101,14 +97,7 @@ function formatRemainingTime(milliseconds) {
   }
 }
 
-// 工具函数：检查文件是否过期
-function isFileExpired(expiryTime) {
-  const now = new Date();
-  const expiry = new Date(expiryTime);
-  return now > expiry;
-}
-
-// 工具函数：清理过期文件
+// 清理过期文件的函数
 function cleanupExpiredFiles() {
   console.log('开始清理过期文件...');
   
@@ -119,133 +108,187 @@ function cleanupExpiredFiles() {
     files.forEach(filename => {
       if (filename === '.metadata') return;
       
+      const filePath = path.join(uploadsDir, filename);
       const metadata = getFileMetadata(filename);
-      if (metadata && isFileExpired(metadata.expiryTime)) {
-        // 删除文件
-        const filePath = path.join(uploadsDir, filename);
-        if (fs.existsSync(filePath)) {
-          fs.unlinkSync(filePath);
-        }
+      
+      if (metadata) {
+        const expiryTime = new Date(metadata.expiryTime);
+        const now = new Date();
         
-        // 删除元数据
-        const metadataPath = path.join(metadataDir, `${filename}.json`);
-        if (fs.existsSync(metadataPath)) {
-          fs.unlinkSync(metadataPath);
+        if (now > expiryTime) {
+          // 删除文件
+          try {
+            fs.unlinkSync(filePath);
+            // 删除元数据
+            const metadataPath = path.join(metadataDir, filename + '.json');
+            if (fs.existsSync(metadataPath)) {
+              fs.unlinkSync(metadataPath);
+            }
+            console.log(`已删除过期文件: ${filename}`);
+            cleanedCount++;
+          } catch (error) {
+            console.error('删除文件失败:', error);
+          }
         }
-        
-        cleanedCount++;
-        console.log(`已删除过期文件: ${filename}`);
+      } else {
+        // 如果没有元数据，检查文件创建时间
+        try {
+          const stats = fs.statSync(filePath);
+          const fileAge = Date.now() - stats.birthtime.getTime();
+          
+          if (fileAge > FILE_EXPIRY_TIME) {
+            fs.unlinkSync(filePath);
+            console.log(`已删除无元数据的过期文件: ${filename}`);
+            cleanedCount++;
+          }
+        } catch (error) {
+          console.error('处理无元数据文件失败:', error);
+        }
       }
     });
     
     console.log(`清理完成，共删除 ${cleanedCount} 个过期文件`);
   } catch (error) {
-    console.error('清理过期文件时出错:', error);
+    console.error('清理过期文件失败:', error);
   }
 }
 
-// 路由：主页面
+// 设置定时任务，每小时清理一次过期文件
+cron.schedule('0 * * * *', cleanupExpiredFiles);
+
+// 启动时清理一次
+cleanupExpiredFiles();
+
+// 路由处理
+// 首页
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  res.sendFile(path.join(publicDir, 'index.html'));
 });
 
-// 路由：文件上传
+// 文件上传处理
 app.post('/upload', (req, res) => {
-  // 添加调试信息
-  console.log('收到上传请求');
-  console.log('Content-Type:', req.headers['content-type']);
-  
-  // 使用动态multer处理，支持更好的错误处理
-  const uploadHandler = upload.single('file');
-  
-  uploadHandler(req, res, (err) => {
-    if (err) {
+  // 使用multer中间件处理上传
+  upload.single('file')(req, res, function (err) {
+    if (err instanceof multer.MulterError) {
       console.error('Multer错误:', err);
-      if (err.code === 'UNEXPECTED_FIELD') {
+      if (err.code === 'LIMIT_FILE_SIZE') {
         return res.status(400).json({ 
           success: false, 
-          message: '字段名不匹配，请确保使用正确的字段名"file"' 
+          message: '文件大小超过限制（最大100MB）' 
+        });
+      }
+      if (err.code === 'LIMIT_UNEXPECTED_FILE') {
+        return res.status(400).json({ 
+          success: false, 
+          message: '请求中缺少文件字段"file"' 
         });
       }
       return res.status(400).json({ 
         success: false, 
-        message: '文件上传失败: ' + err.message 
+        message: '上传错误: ' + err.message 
       });
+    } else if (err) {
+      console.error('上传错误:', err);
+      return res.status(400).json({ success: false, message: '上传失败' });
     }
-    
+
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: '没有文件被上传' });
+    }
+
     try {
-      if (!req.file) {
-        return res.status(400).json({ success: false, message: '没有文件被上传' });
-      }
+      console.log('文件上传:', req.file.originalname);
       
-      console.log('文件上传成功:', req.file.originalname);
-      
-      const metadata = saveFileMetadata(req.file.filename, req.file.originalname, req.file.size, req.file.mimetype);
-      const uploadedFile = {
-        ...metadata,
-        remainingTime: calculateRemainingTime(metadata.expiryTime),
-        remainingTimeFormatted: formatRemainingTime(calculateRemainingTime(metadata.expiryTime))
-      };
-      
+      // 保存文件元数据
+      saveFileMetadata(
+        req.file.filename,
+        req.file.originalname,
+        req.file.mimetype,
+        req.file.size
+      );
+
+      const expiryTime = new Date(Date.now() + FILE_EXPIRY_TIME);
+      const remainingTime = expiryTime.getTime() - Date.now();
+
       res.json({
         success: true,
         message: '文件上传成功',
-        file: uploadedFile
+        file: {
+          filename: req.file.filename,
+          originalName: req.file.originalname,
+          size: req.file.size,
+          uploadTime: new Date().toISOString(),
+          expiryTime: expiryTime.toISOString(),
+          remainingTime: remainingTime,
+          remainingTimeFormatted: formatRemainingTime(remainingTime)
+        }
       });
     } catch (error) {
-      console.error('文件上传错误:', error);
-      res.status(500).json({ success: false, message: '文件上传失败' });
+      console.error('处理上传失败:', error);
+      res.status(500).json({ success: false, message: '处理上传失败' });
     }
   });
 });
 
-// 路由：获取文件列表
+// 获取文件列表
 app.get('/files', (req, res) => {
   try {
     const files = fs.readdirSync(uploadsDir);
     const fileList = [];
-    
+
     files.forEach(filename => {
       if (filename === '.metadata') return;
       
+      const filePath = path.join(uploadsDir, filename);
       const metadata = getFileMetadata(filename);
+      
       if (metadata) {
-        const remainingTime = calculateRemainingTime(metadata.expiryTime);
+        const expiryTime = new Date(metadata.expiryTime);
+        const remainingTime = expiryTime.getTime() - Date.now();
+        
         if (remainingTime > 0) { // 只返回未过期的文件
           fileList.push({
-            ...metadata,
-            remainingTime,
+            filename: metadata.filename,
+            originalName: metadata.originalName,
+            size: metadata.size,
+            mimetype: metadata.mimetype,
+            uploadTime: metadata.uploadTime,
+            expiryTime: metadata.expiryTime,
+            remainingTime: remainingTime,
             remainingTimeFormatted: formatRemainingTime(remainingTime)
           });
         }
       }
     });
-    
-    // 按上传时间倒序排列
+
+    // 按上传时间排序（最新的在前）
     fileList.sort((a, b) => new Date(b.uploadTime) - new Date(a.uploadTime));
     
     res.json({ files: fileList });
   } catch (error) {
-    console.error('获取文件列表错误:', error);
+    console.error('获取文件列表失败:', error);
     res.status(500).json({ success: false, message: '获取文件列表失败' });
   }
 });
 
-// 路由：文件下载
+// 文件下载处理
 app.get('/download/:filename', (req, res) => {
+  const filename = req.params.filename;
+  const filePath = path.join(uploadsDir, filename);
+  
   try {
-    const filename = req.params.filename;
-    const filePath = path.join(uploadsDir, filename);
-    
     if (!fs.existsSync(filePath)) {
       return res.status(404).json({ success: false, message: '文件不存在' });
     }
-    
+
     const metadata = getFileMetadata(filename);
-    if (metadata && isFileExpired(metadata.expiryTime)) {
-      return res.status(410).json({ success: false, message: '文件已过期' });
+    if (metadata) {
+      const expiryTime = new Date(metadata.expiryTime);
+      if (Date.now() > expiryTime.getTime()) {
+        return res.status(410).json({ success: false, message: '文件已过期' });
+      }
     }
-    
+
     // 设置下载头
     const originalName = metadata ? metadata.originalName : filename;
     res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(originalName)}"`);
@@ -253,18 +296,18 @@ app.get('/download/:filename', (req, res) => {
     // 发送文件
     res.sendFile(filePath);
   } catch (error) {
-    console.error('文件下载错误:', error);
-    res.status(500).json({ success: false, message: '文件下载失败' });
+    console.error('下载文件失败:', error);
+    res.status(500).json({ success: false, message: '下载文件失败' });
   }
 });
 
-// 路由：删除文件
+// 文件删除处理
 app.delete('/delete/:filename', (req, res) => {
+  const filename = req.params.filename;
+  const filePath = path.join(uploadsDir, filename);
+  const metadataPath = path.join(metadataDir, filename + '.json');
+  
   try {
-    const filename = req.params.filename;
-    const filePath = path.join(uploadsDir, filename);
-    const metadataPath = path.join(metadataDir, `${filename}.json`);
-    
     // 删除文件
     if (fs.existsSync(filePath)) {
       fs.unlinkSync(filePath);
@@ -277,34 +320,33 @@ app.delete('/delete/:filename', (req, res) => {
     
     res.json({ success: true, message: '文件删除成功' });
   } catch (error) {
-    console.error('文件删除错误:', error);
-    res.status(500).json({ success: false, message: '文件删除失败' });
+    console.error('删除文件失败:', error);
+    res.status(500).json({ success: false, message: '删除文件失败' });
   }
 });
 
-// 定时任务：每小时清理过期文件
-cron.schedule('0 * * * *', () => {
-  cleanupExpiredFiles();
+// 错误处理中间件
+app.use((error, req, res, next) => {
+  console.error('服务器错误:', error);
+  res.status(500).json({ success: false, message: '服务器内部错误' });
 });
 
-// 启动时清理一次过期文件
-cleanupExpiredFiles();
-
 // 启动服务器
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`临时文件共享服务已启动`);
+app.listen(PORT, () => {
+  console.log(`\n临时文件共享服务已启动！`);
   console.log(`本地访问: http://localhost:${PORT}`);
-  console.log(`公网访问: http://[您的公网IP]:${PORT}`);
+  console.log(`网络访问: http://[你的IP]:${PORT}`);
   console.log('文件将在上传后24小时自动删除');
+  console.log('\n按 Ctrl+C 停止服务...');
 });
 
 // 优雅关闭
 process.on('SIGINT', () => {
-  console.log('\n正在关闭服务器...');
+  console.log('\n正在关闭服务...');
   process.exit(0);
 });
 
 process.on('SIGTERM', () => {
-  console.log('\n正在关闭服务器...');
+  console.log('\n正在关闭服务...');
   process.exit(0);
 });

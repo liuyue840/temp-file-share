@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -19,20 +19,25 @@
         }
 
         .container {
-            max-width: 1000px;
+            max-width: 1200px;
             margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
         }
 
         .header {
-            text-align: center;
-            margin-bottom: 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
+            padding: 30px;
+            text-align: center;
         }
 
         .header h1 {
             font-size: 2.5rem;
             margin-bottom: 10px;
-            font-weight: 300;
+            font-weight: 700;
         }
 
         .header p {
@@ -40,226 +45,252 @@
             opacity: 0.9;
         }
 
-        .auto-delete-notice {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 10px;
-            padding: 15px;
-            margin-bottom: 30px;
-            text-align: center;
-            color: white;
-            backdrop-filter: blur(10px);
+        .main-content {
+            padding: 40px;
+        }
+
+        .upload-section {
+            margin-bottom: 40px;
         }
 
         .upload-area {
-            background: white;
+            border: 3px dashed #667eea;
             border-radius: 15px;
-            padding: 40px;
-            margin-bottom: 30px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s ease;
-        }
-
-        .upload-zone {
-            border: 3px dashed #007bff;
-            border-radius: 10px;
             padding: 60px 20px;
             text-align: center;
-            background: #f8f9fa;
+            background: #f8f9ff;
             transition: all 0.3s ease;
             cursor: pointer;
+            position: relative;
         }
 
-        .upload-zone:hover,
-        .upload-zone.dragover {
-            border-color: #0056b3;
-            background: #e3f2fd;
+        .upload-area:hover {
+            border-color: #764ba2;
+            background: #f0f2ff;
             transform: translateY(-2px);
         }
 
+        .upload-area.dragover {
+            border-color: #764ba2;
+            background: #e8ebff;
+            transform: scale(1.02);
+        }
+
         .upload-icon {
-            font-size: 3rem;
-            color: #007bff;
+            font-size: 4rem;
+            color: #667eea;
             margin-bottom: 20px;
         }
 
         .upload-text {
-            font-size: 1.2rem;
-            color: #495057;
+            font-size: 1.3rem;
+            color: #333;
             margin-bottom: 10px;
+            font-weight: 600;
         }
 
         .upload-hint {
-            color: #6c757d;
-            font-size: 0.9rem;
+            color: #666;
+            font-size: 1rem;
         }
 
         .file-input {
             display: none;
         }
 
-        .progress-container {
+        .upload-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 1.1rem;
+            cursor: pointer;
             margin-top: 20px;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .upload-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .progress-container {
             display: none;
+            margin-top: 20px;
+            background: #f8f9ff;
+            border-radius: 10px;
+            padding: 20px;
         }
 
         .progress-bar {
             width: 100%;
             height: 8px;
-            background: #e9ecef;
+            background: #e0e0e0;
             border-radius: 4px;
             overflow: hidden;
+            margin-bottom: 10px;
         }
 
         .progress-fill {
             height: 100%;
-            background: linear-gradient(90deg, #007bff, #0056b3);
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
             width: 0%;
             transition: width 0.3s ease;
         }
 
         .progress-text {
             text-align: center;
-            margin-top: 10px;
-            color: #495057;
+            color: #333;
+            font-weight: 600;
         }
 
         .files-section {
-            background: white;
-            border-radius: 15px;
-            padding: 30px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            margin-top: 40px;
         }
 
-        .files-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+        .section-title {
+            font-size: 1.8rem;
+            color: #333;
             margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 2px solid #f8f9fa;
-        }
-
-        .files-title {
-            font-size: 1.5rem;
-            color: #495057;
-            font-weight: 500;
-        }
-
-        .refresh-btn {
-            background: #28a745;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 0.9rem;
-            transition: all 0.3s ease;
-        }
-
-        .refresh-btn:hover {
-            background: #218838;
-            transform: translateY(-1px);
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
         .file-list {
             display: grid;
-            gap: 15px;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
         }
 
         .file-item {
-            display: grid;
-            grid-template-columns: auto 1fr auto auto auto;
-            align-items: center;
-            gap: 15px;
-            padding: 15px;
-            background: #f8f9fa;
-            border-radius: 10px;
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
             transition: all 0.3s ease;
+            border: 1px solid #f0f0f0;
         }
 
         .file-item:hover {
-            background: #e9ecef;
-            transform: translateY(-1px);
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        .file-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
         }
 
         .file-icon {
-            font-size: 1.5rem;
-            color: #007bff;
+            font-size: 2.5rem;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 12px;
         }
 
         .file-info {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
+            flex: 1;
         }
 
         .file-name {
-            font-weight: 500;
-            color: #495057;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
             word-break: break-all;
         }
 
-        .file-details {
-            font-size: 0.85rem;
-            color: #6c757d;
-        }
-
-        .file-time {
+        .file-meta {
+            color: #666;
             font-size: 0.9rem;
-            font-weight: 500;
-            padding: 4px 8px;
-            border-radius: 4px;
-            text-align: center;
-            min-width: 100px;
         }
-
-        .time-safe { background: #d4edda; color: #155724; }
-        .time-warning { background: #fff3cd; color: #856404; }
-        .time-danger { background: #f8d7da; color: #721c24; }
 
         .file-actions {
             display: flex;
-            gap: 8px;
+            gap: 10px;
+            margin-top: 15px;
         }
 
         .btn {
-            padding: 6px 12px;
+            padding: 8px 16px;
             border: none;
-            border-radius: 6px;
+            border-radius: 8px;
             cursor: pointer;
-            font-size: 0.85rem;
+            font-size: 0.9rem;
+            font-weight: 600;
             transition: all 0.3s ease;
             text-decoration: none;
             display: inline-flex;
             align-items: center;
-            gap: 4px;
+            gap: 5px;
         }
 
         .btn-download {
-            background: #007bff;
+            background: #4CAF50;
             color: white;
         }
 
         .btn-download:hover {
-            background: #0056b3;
+            background: #45a049;
             transform: translateY(-1px);
         }
 
         .btn-delete {
-            background: #dc3545;
+            background: #f44336;
             color: white;
         }
 
         .btn-delete:hover {
-            background: #c82333;
+            background: #da190b;
             transform: translateY(-1px);
+        }
+
+        .time-remaining {
+            background: #fff3cd;
+            color: #856404;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-top: 10px;
+            display: inline-block;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
         .empty-state {
             text-align: center;
             padding: 60px 20px;
-            color: #6c757d;
+            color: #666;
         }
 
         .empty-icon {
@@ -268,36 +299,14 @@
             opacity: 0.5;
         }
 
-        .loading {
-            text-align: center;
-            padding: 40px;
-            color: #6c757d;
-        }
-
-        .spinner {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #007bff;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-right: 10px;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
         .toast {
             position: fixed;
             top: 20px;
             right: 20px;
-            padding: 15px 20px;
+            padding: 15px 25px;
             border-radius: 8px;
             color: white;
-            font-weight: 500;
+            font-weight: 600;
             z-index: 1000;
             transform: translateX(400px);
             transition: transform 0.3s ease;
@@ -307,45 +316,54 @@
             transform: translateX(0);
         }
 
-        .toast.success { background: #28a745; }
-        .toast.error { background: #dc3545; }
-        .toast.info { background: #17a2b8; }
+        .toast.success {
+            background: #4CAF50;
+        }
 
-        /* 响应式设计 */
+        .toast.error {
+            background: #f44336;
+        }
+
         @media (max-width: 768px) {
             .container {
-                padding: 10px;
+                margin: 10px;
+                border-radius: 15px;
+            }
+
+            .header {
+                padding: 20px;
             }
 
             .header h1 {
                 font-size: 2rem;
             }
 
-            .upload-area {
+            .main-content {
                 padding: 20px;
             }
 
-            .upload-zone {
+            .upload-area {
                 padding: 40px 15px;
             }
 
-            .files-section {
-                padding: 20px;
+            .upload-icon {
+                font-size: 3rem;
             }
 
-            .file-item {
-                grid-template-columns: auto 1fr;
-                gap: 10px;
+            .upload-text {
+                font-size: 1.1rem;
             }
 
-            .file-time,
-            .file-actions {
-                grid-column: 1 / -1;
-                justify-self: start;
+            .file-list {
+                grid-template-columns: 1fr;
             }
 
             .file-actions {
-                margin-top: 10px;
+                flex-direction: column;
+            }
+
+            .btn {
+                justify-content: center;
             }
         }
     </style>
@@ -353,187 +371,197 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>📁 临时文件共享</h1>
-            <p>简单、快速、安全的文件分享服务</p>
+            <h1> 临时文件共享服务</h1>
+            <p>简单、快速、安全的文件分享平台</p>
         </div>
 
-        <div class="auto-delete-notice">
-            ⏰ 文件将在上传后24小时自动删除，请及时下载需要的文件
-        </div>
-
-        <div class="upload-area">
-            <div class="upload-zone" id="uploadZone">
-                <div class="upload-icon">📤</div>
-                <div class="upload-text">拖拽文件到此处或点击选择</div>
-                <div class="upload-hint">支持多文件上传，单个文件最大100MB</div>
-            </div>
-            <input type="file" id="fileInput" class="file-input" multiple>
-            
-            <div class="progress-container" id="progressContainer">
-                <div class="progress-bar">
-                    <div class="progress-fill" id="progressFill"></div>
+        <div class="main-content">
+            <div class="upload-section">
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon"></div>
+                    <div class="upload-text">拖拽文件到这里或点击上传</div>
+                    <div class="upload-hint">支持多文件上传，单个文件最大 100MB</div>
+                    <button class="upload-btn" onclick="document.getElementById('fileInput').click()">
+                         选择文件
+                    </button>
+                    <input type="file" id="fileInput" class="file-input" multiple>
                 </div>
-                <div class="progress-text" id="progressText">上传中...</div>
-            </div>
-        </div>
 
-        <div class="files-section">
-            <div class="files-header">
-                <h2 class="files-title">📋 文件列表</h2>
-                <button class="refresh-btn" id="refreshBtn">🔄 刷新</button>
+                <div class="progress-container" id="progressContainer">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    <div class="progress-text" id="progressText">准备上传...</div>
+                </div>
             </div>
-            <div id="fileList" class="file-list">
-                <div class="loading">
-                    <div class="spinner"></div>
-                    加载文件列表...
+
+            <div class="files-section">
+                <h2 class="section-title">
+                     文件列表
+                    <button class="btn btn-download" onclick="fileManager.loadFiles()" style="margin-left: auto; font-size: 0.9rem;">
+                         刷新
+                    </button>
+                </h2>
+                <div class="file-list" id="fileList">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        加载中...
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        class FileShareApp {
+        class FileManager {
             constructor() {
-                this.initElements();
-                this.bindEvents();
-                this.loadFiles();
-                this.startCountdownUpdate();
-            }
-
-            initElements() {
-                this.uploadZone = document.getElementById('uploadZone');
+                this.uploadArea = document.getElementById('uploadArea');
                 this.fileInput = document.getElementById('fileInput');
+                this.fileList = document.getElementById('fileList');
                 this.progressContainer = document.getElementById('progressContainer');
                 this.progressFill = document.getElementById('progressFill');
                 this.progressText = document.getElementById('progressText');
-                this.fileList = document.getElementById('fileList');
-                this.refreshBtn = document.getElementById('refreshBtn');
-            }
-
-            bindEvents() {
-                // 上传区域事件
-                this.uploadZone.addEventListener('click', () => this.fileInput.click());
-                this.uploadZone.addEventListener('dragover', this.handleDragOver.bind(this));
-                this.uploadZone.addEventListener('dragleave', this.handleDragLeave.bind(this));
-                this.uploadZone.addEventListener('drop', this.handleDrop.bind(this));
                 
-                // 文件选择事件
-                this.fileInput.addEventListener('change', this.handleFileSelect.bind(this));
-                
-                // 刷新按钮
-                this.refreshBtn.addEventListener('click', () => this.loadFiles());
+                this.initEventListeners();
+                this.loadFiles();
             }
 
-            handleDragOver(e) {
-                e.preventDefault();
-                this.uploadZone.classList.add('dragover');
+            initEventListeners() {
+                // 文件选择
+                this.fileInput.addEventListener('change', (e) => {
+                    this.handleFiles(e.target.files);
+                });
+
+                // 拖拽上传
+                this.uploadArea.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    this.uploadArea.classList.add('dragover');
+                });
+
+                this.uploadArea.addEventListener('dragleave', (e) => {
+                    e.preventDefault();
+                    this.uploadArea.classList.remove('dragover');
+                });
+
+                this.uploadArea.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    this.uploadArea.classList.remove('dragover');
+                    this.handleFiles(e.dataTransfer.files);
+                });
+
+                // 点击上传区域
+                this.uploadArea.addEventListener('click', (e) => {
+                    if (e.target === this.uploadArea || e.target.closest('.upload-area')) {
+                        this.fileInput.click();
+                    }
+                });
             }
 
-            handleDragLeave(e) {
-                e.preventDefault();
-                this.uploadZone.classList.remove('dragover');
-            }
-
-            handleDrop(e) {
-                e.preventDefault();
-                this.uploadZone.classList.remove('dragover');
-                const files = Array.from(e.dataTransfer.files);
-                this.uploadFiles(files);
-            }
-
-            handleFileSelect(e) {
-                const files = Array.from(e.target.files);
-                this.uploadFiles(files);
-            }
-
-            async uploadFiles(files) {
+            async handleFiles(files) {
                 if (files.length === 0) return;
 
-                // 修复：使用正确的字段名 'file' 而不是 'files'
-                // 由于后端配置的是 upload.single('file')，我们需要逐个上传文件
-                for (let i = 0; i < files.length; i++) {
-                    const file = files[i];
-                    const formData = new FormData();
-                    formData.append('file', file);
-
-                    this.showProgress();
-
+                for (let file of files) {
                     try {
-                        const response = await fetch('/upload', {
-                            method: 'POST',
-                            body: formData
-                        });
-
-                        const result = await response.json();
-
-                        if (result.success) {
-                            this.showToast(`${file.name} 上传成功`, 'success');
-                        } else {
-                            this.showToast(`${file.name} 上传失败: ${result.message}`, 'error');
-                        }
+                        await this.uploadFile(file);
                     } catch (error) {
                         this.showToast(`${file.name} 上传失败: ${error.message}`, 'error');
-                    } finally {
-                        this.hideProgress();
                     }
                 }
+            }
 
-                // 上传完成后刷新文件列表
-                this.loadFiles();
-                this.fileInput.value = '';
+            async uploadFile(file) {
+                const formData = new FormData();
+                formData.append('file', file);
+
+                this.progressContainer.style.display = 'block';
+                this.progressFill.style.width = '0%';
+                this.progressText.textContent = '准备上传...';
+
+                try {
+                    const xhr = new XMLHttpRequest();
+                    
+                    return new Promise((resolve, reject) => {
+                        xhr.upload.addEventListener('progress', (e) => {
+                            if (e.lengthComputable) {
+                                const progress = (e.loaded / e.total) * 100;
+                                this.progressFill.style.width = progress + '%';
+                                this.progressText.textContent = `上传中... ${Math.round(progress)}%`;
+                            }
+                        });
+
+                        xhr.addEventListener('load', () => {
+                            if (xhr.status === 200) {
+                                const response = JSON.parse(xhr.responseText);
+                                this.progressText.textContent = '上传完成！';
+                                this.showToast(`${file.name} 上传成功！`, 'success');
+                                setTimeout(() => {
+                                    this.progressContainer.style.display = 'none';
+                                    this.loadFiles();
+                                }, 1000);
+                                resolve(response);
+                            } else {
+                                reject(new Error('上传失败'));
+                            }
+                        });
+
+                        xhr.addEventListener('error', () => {
+                            reject(new Error('网络错误'));
+                        });
+
+                        xhr.open('POST', '/upload');
+                        xhr.send(formData);
+                    });
+                } catch (error) {
+                    this.progressContainer.style.display = 'none';
+                    throw error;
+                }
             }
 
             async loadFiles() {
-                this.fileList.innerHTML = '<div class="loading"><div class="spinner"></div>加载文件列表...</div>';
+                // 显示加载状态
+                this.fileList.innerHTML = '<div class="loading"><div class="spinner"></div>加载中...</div>';
 
                 try {
                     const response = await fetch('/files');
-                    const result = await response.json();
-
-                    if (result.files && result.files.length > 0) {
-                        this.renderFiles(result.files);
+                    const data = await response.json();
+                    
+                    if (data.files && data.files.length > 0) {
+                        this.renderFiles(data.files);
                     } else {
-                        this.renderEmptyState();
+                        this.fileList.innerHTML = '<div class="empty-state"><div class="empty-icon"></div><p>暂无文件</p></div>';
                     }
                 } catch (error) {
-                    this.fileList.innerHTML = '<div class="empty-state"><div class="empty-icon">❌</div><p>加载文件列表失败</p></div>';
+                    this.fileList.innerHTML = '<div class="empty-state"><div class="empty-icon"></div><p>加载文件列表失败</p></div>';
+                    this.showToast('加载文件列表失败', 'error');
                 }
             }
 
             renderFiles(files) {
                 this.fileList.innerHTML = files.map(file => `
-                    <div class="file-item" data-filename="${file.filename}">
-                        <div class="file-icon">${this.getFileIcon(file.mimetype)}</div>
-                        <div class="file-info">
-                            <div class="file-name">${file.originalName}</div>
-                            <div class="file-details">
-                                ${this.formatFileSize(file.size)} • 
-                                ${this.formatUploadTime(file.uploadTime)}
+                    <div class="file-item">
+                        <div class="file-header">
+                            <div class="file-icon">${this.getFileIcon(file.mimetype)}</div>
+                            <div class="file-info">
+                                <div class="file-name">${file.originalName}</div>
+                                <div class="file-meta">
+                                    ${this.formatFileSize(file.size)}  
+                                    上传时间 ${new Date(file.uploadTime).toLocaleString()}
+                                </div>
                             </div>
                         </div>
-                        <div class="file-time ${this.getTimeClass(file.remainingTime)}" 
-                             data-remaining="${file.remainingTime}">
-                            ${file.remainingTimeFormatted}
+                        <div class="time-remaining">
+                             剩余时间: ${file.remainingTimeFormatted}
                         </div>
                         <div class="file-actions">
                             <a href="/download/${file.filename}" class="btn btn-download" download>
-                                📥 下载
+                                 下载
                             </a>
-                            <button class="btn btn-delete" onclick="app.deleteFile('${file.filename}')">
-                                🗑️ 删除
+                            <button class="btn btn-delete" onclick="fileManager.deleteFile('${file.filename}')">
+                                 删除
                             </button>
                         </div>
                     </div>
                 `).join('');
-            }
-
-            renderEmptyState() {
-                this.fileList.innerHTML = `
-                    <div class="empty-state">
-                        <div class="empty-icon">📂</div>
-                        <p>暂无文件，请上传文件开始分享</p>
-                    </div>
-                `;
             }
 
             async deleteFile(filename) {
@@ -544,63 +572,18 @@
                         method: 'DELETE'
                     });
 
-                    const result = await response.json();
-
-                    if (result.success) {
-                        this.showToast(result.message, 'success');
+                    if (response.ok) {
+                        this.showToast('文件删除成功', 'success');
                         this.loadFiles();
                     } else {
-                        this.showToast(result.message, 'error');
+                        throw new Error('删除失败');
                     }
                 } catch (error) {
                     this.showToast('删除失败: ' + error.message, 'error');
                 }
             }
 
-            startCountdownUpdate() {
-                setInterval(() => {
-                    const timeElements = document.querySelectorAll('.file-time[data-remaining]');
-                    timeElements.forEach(element => {
-                        const remaining = parseInt(element.dataset.remaining);
-                        const newRemaining = Math.max(0, remaining - 1000);
-                        
-                        element.dataset.remaining = newRemaining;
-                        element.textContent = this.formatRemainingTime(newRemaining);
-                        element.className = `file-time ${this.getTimeClass(newRemaining)}`;
-                        
-                        if (newRemaining <= 0) {
-                            this.loadFiles(); // 重新加载文件列表
-                        }
-                    });
-                }, 1000);
-            }
-
-            showProgress() {
-                this.progressContainer.style.display = 'block';
-                this.progressFill.style.width = '0%';
-                
-                // 模拟进度
-                let progress = 0;
-                const interval = setInterval(() => {
-                    progress += Math.random() * 30;
-                    if (progress >= 90) {
-                        clearInterval(interval);
-                        progress = 90;
-                    }
-                    this.progressFill.style.width = progress + '%';
-                    this.progressText.textContent = `上传中... ${Math.round(progress)}%`;
-                }, 200);
-            }
-
-            hideProgress() {
-                this.progressFill.style.width = '100%';
-                this.progressText.textContent = '上传完成！';
-                setTimeout(() => {
-                    this.progressContainer.style.display = 'none';
-                }, 1000);
-            }
-
-            showToast(message, type = 'info') {
+            showToast(message, type = 'success') {
                 const toast = document.createElement('div');
                 toast.className = `toast ${type}`;
                 toast.textContent = message;
@@ -613,36 +596,24 @@
                 }, 3000);
             }
 
-            getFileIcon(mimetype) {
-                if (!mimetype) return '📄';
-                if (mimetype.startsWith('image/')) return '🖼️';
-                if (mimetype.startsWith('video/')) return '🎥';
-                if (mimetype.startsWith('audio/')) return '🎵';
-                if (mimetype.includes('pdf')) return '📕';
-                if (mimetype.includes('word')) return '📘';
-                if (mimetype.includes('excel') || mimetype.includes('spreadsheet')) return '📗';
-                if (mimetype.includes('zip') || mimetype.includes('rar')) return '📦';
-                return '📄';
-            }
-
             formatFileSize(bytes) {
                 if (bytes === 0) return '0 B';
                 const k = 1024;
                 const sizes = ['B', 'KB', 'MB', 'GB'];
                 const i = Math.floor(Math.log(bytes) / Math.log(k));
-                return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
             }
 
-            formatUploadTime(uploadTime) {
-                const date = new Date(uploadTime);
-                const now = new Date();
-                const diff = now - date;
-                
-                if (diff < 60000) return '刚刚';
-                if (diff < 3600000) return Math.floor(diff / 60000) + '分钟前';
-                if (diff < 86400000) return Math.floor(diff / 3600000) + '小时前';
-                
-                return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+            getFileIcon(mimetype) {
+                if (!mimetype) return '';
+                if (mimetype.startsWith('image/')) return '';
+                if (mimetype.startsWith('video/')) return '';
+                if (mimetype.startsWith('audio/')) return '';
+                if (mimetype.includes('pdf')) return '';
+                if (mimetype.includes('word')) return '';
+                if (mimetype.includes('excel') || mimetype.includes('spreadsheet')) return '';
+                if (mimetype.includes('zip') || mimetype.includes('rar')) return '';
+                return '';
             }
 
             formatRemainingTime(milliseconds) {
@@ -657,17 +628,15 @@
                     return `${minutes}分钟`;
                 }
             }
-
-            getTimeClass(remainingTime) {
-                const hours = remainingTime / (1000 * 60 * 60);
-                if (hours > 12) return 'time-safe';
-                if (hours > 6) return 'time-warning';
-                return 'time-danger';
-            }
         }
 
-        // 启动应用
-        const app = new FileShareApp();
+        // 初始化文件管理器
+        const fileManager = new FileManager();
+
+        // 定期刷新文件列表
+        setInterval(() => {
+            fileManager.loadFiles();
+        }, 30000); // 每30秒刷新一次
     </script>
 </body>
 </html>
