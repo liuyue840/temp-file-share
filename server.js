@@ -1,11 +1,15 @@
-﻿const express = require('express');
+﻿require('dotenv').config();
+const express = require('express');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const cron = require('node-cron');
+const morgan = require('morgan');
+const cors = require('cors');
+const helmet = require('helmet');
 
 const app = express();
-const PORT = 8000;
+const PORT = process.env.PORT || 8000;
 
 // 确保必要的目录存在
 const uploadsDir = path.join(__dirname, 'uploads');
@@ -18,12 +22,27 @@ const publicDir = path.join(__dirname, 'public');
   }
 });
 
-// 配置静态文件服务
+// 中间件配置
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+      "script-src": ["'self'", "'unsafe-inline'", "cdn.jsdelivr.net"],
+      "style-src": ["'self'", "'unsafe-inline'", "cdn.jsdelivr.net"],
+      "font-src": ["'self'", "cdn.jsdelivr.net", "data:"],
+      "img-src": ["'self'", "data:", "blob:"],
+    },
+  },
+}));
+app.use(cors());
+app.use(morgan('dev'));
 app.use(express.static(publicDir));
 app.use(express.json());
 
-// 文件过期时间（24小时）
-const FILE_EXPIRY_TIME = 24 * 60 * 60 * 1000; // 24小时毫秒数
+// 配置
+const MAX_FILE_SIZE = parseInt(process.env.MAX_FILE_SIZE) || 100 * 1024 * 1024; // 默认100MB
+const FILE_EXPIRY_HOURS = parseInt(process.env.FILE_EXPIRY_HOURS) || 24;
+const FILE_EXPIRY_TIME = FILE_EXPIRY_HOURS * 60 * 60 * 1000;
 
 // 配置multer用于文件上传
 const storage = multer.diskStorage({
@@ -32,6 +51,7 @@ const storage = multer.diskStorage({
   },
   filename: function (req, file, cb) {
     // 生成唯一文件名
+    // 使用 URL 安全的字符替换文件名中的特殊字符
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
     const ext = path.extname(file.originalname);
     const filename = uniqueSuffix + ext;
@@ -42,7 +62,7 @@ const storage = multer.diskStorage({
 const upload = multer({ 
   storage: storage,
   limits: {
-    fileSize: 100 * 1024 * 1024 // 100MB限制
+    fileSize: MAX_FILE_SIZE
   },
   fileFilter: function (req, file, cb) {
     // 这里可以添加文件类型过滤逻辑
@@ -102,13 +122,22 @@ function cleanupExpiredFiles() {
   console.log('开始清理过期文件...');
   
   try {
+    if (!fs.existsSync(uploadsDir)) return;
+
     const files = fs.readdirSync(uploadsDir);
     let cleanedCount = 0;
     
     files.forEach(filename => {
-      if (filename === '.metadata') return;
+      if (filename === '.metadata' || filename === '.gitkeep') return;
       
       const filePath = path.join(uploadsDir, filename);
+      // 检查是否是目录
+      try {
+          if (fs.lstatSync(filePath).isDirectory()) return;
+      } catch (e) {
+          return;
+      }
+
       const metadata = getFileMetadata(filename);
       
       if (metadata) {
@@ -174,7 +203,7 @@ app.post('/upload', (req, res) => {
       if (err.code === 'LIMIT_FILE_SIZE') {
         return res.status(400).json({ 
           success: false, 
-          message: '文件大小超过限制（最大100MB）' 
+          message: `文件大小超过限制（最大${MAX_FILE_SIZE / 1024 / 1024}MB）` 
         });
       }
       if (err.code === 'LIMIT_UNEXPECTED_FILE') {
@@ -233,13 +262,23 @@ app.post('/upload', (req, res) => {
 // 获取文件列表
 app.get('/files', (req, res) => {
   try {
+    if (!fs.existsSync(uploadsDir)) {
+         return res.json({ files: [] });
+    }
     const files = fs.readdirSync(uploadsDir);
     const fileList = [];
 
     files.forEach(filename => {
-      if (filename === '.metadata') return;
+      if (filename === '.metadata' || filename === '.gitkeep') return;
       
       const filePath = path.join(uploadsDir, filename);
+      
+      try {
+          if (fs.lstatSync(filePath).isDirectory()) return;
+      } catch (e) {
+          return;
+      }
+
       const metadata = getFileMetadata(filename);
       
       if (metadata) {
@@ -291,6 +330,7 @@ app.get('/download/:filename', (req, res) => {
 
     // 设置下载头
     const originalName = metadata ? metadata.originalName : filename;
+    // 使用 encodeURIComponent 编码文件名以支持中文
     res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(originalName)}"`);
     
     // 发送文件
@@ -335,8 +375,8 @@ app.use((error, req, res, next) => {
 app.listen(PORT, () => {
   console.log(`\n临时文件共享服务已启动！`);
   console.log(`本地访问: http://localhost:${PORT}`);
-  console.log(`网络访问: http://[你的IP]:${PORT}`);
-  console.log('文件将在上传后24小时自动删除');
+  console.log(`文件将在上传后 ${FILE_EXPIRY_HOURS} 小时自动删除`);
+  console.log(`最大文件大小: ${MAX_FILE_SIZE / 1024 / 1024}MB`);
   console.log('\n按 Ctrl+C 停止服务...');
 });
 

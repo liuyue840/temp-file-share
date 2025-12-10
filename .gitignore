@@ -78,7 +78,8 @@ dist
 
 # Gatsby files
 .cache/
-public
+# public  <-- Commented out because we need to commit public folder
+
 
 # Storybook build outputs
 .out
